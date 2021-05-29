@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t yevhenii/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true yevhenii/react-test npm test
+
+after_success:
+  - docker build -t yevhenii/multi-client ./client
+  - docker build -t yevhenii/multi-nginx ./nginx
+  - docker build -t yevhenii/multi-server ./server
+  - docker build -t yevhenii/multi-worker ./worker
+  #login into docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #pushing images to docker hub
+  - docker push yevhenii/multi-client
+  - docker push yevhenii/multi-nginx
+  - docker push yevhenii/multi-server
+  - docker push yevhenii/multi-worker
